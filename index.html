@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .calc-button-active {
+            transform: scale(0.95);
+        }
+
+        /* 스크롤바 숨기기 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100 relative">
+        
+        <!-- 헤더 부분 -->
+        <div class="p-6 flex justify-between items-center border-b border-gray-50">
+            <div class="flex items-center gap-2 text-gray-400">
+                <i data-lucide="calculator" class="w-5 h-5"></i>
+                <span class="text-sm font-medium tracking-wider uppercase">계산기</span>
+            </div>
+            <button id="history-toggle" class="p-2 text-gray-400 hover:text-orange-500 transition-colors">
+                <i data-lucide="history" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- 디스플레이 섹션 -->
+        <div class="relative h-48 flex flex-col justify-end items-end p-8 bg-gradient-to-b from-transparent to-gray-50/50">
+            <!-- 히스토리 레이어 -->
+            <div id="history-panel" class="hidden absolute inset-0 bg-white/95 z-10 p-6 overflow-y-auto no-scrollbar backdrop-blur-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-800">계산 기록</h3>
+                    <button id="clear-history" class="text-xs text-red-500 hover:underline">모두 삭제</button>
+                </div>
+                <div id="history-list" class="space-y-2">
+                    <p class="text-gray-400 text-sm italic">기록이 없습니다.</p>
+                </div>
+            </div>
+            
+            <div id="sub-display" class="text-gray-400 text-lg h-8 mb-1 overflow-hidden transition-all duration-300"></div>
+            <div id="main-display" class="text-6xl font-light text-gray-900 truncate w-full text-right tracking-tighter">0</div>
+        </div>
+
+        <!-- 버튼 패드 -->
+        <div class="p-6 grid grid-cols-4 gap-3 bg-white">
+            <!-- 1행 -->
+            <button onclick="clearAll()" class="h-16 text-xl font-semibold rounded-2xl bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95 transition-all">AC</button>
+            <button onclick="toggleSign()" class="h-16 text-xl font-semibold rounded-2xl bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95 transition-all">+/-</button>
+            <button onclick="inputPercent()" class="h-16 text-xl font-semibold rounded-2xl bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95 transition-all">%</button>
+            <button onclick="performOperation('÷')" class="h-16 text-xl font-semibold rounded-2xl bg-orange-500 text-white hover:bg-orange-600 active:scale-95 transition-all">÷</button>
+
+            <!-- 2행 -->
+            <button onclick="inputDigit('7')" class="h-16 text-xl font-semibold rounded-2xl bg-white border border-gray-50 text-gray-800 hover:bg-gray-100 active:scale-95 transition-all shadow-sm">7</button>
+            <button onclick="inputDigit('8')" class="h-16 text-xl font-semibold rounded-2xl bg-white border border-gray-50 text-gray-800 hover:bg-gray-100 active:scale-95 transition-all shadow-sm">8</button>
+            <button onclick="inputDigit('9')" class="h-16 text-xl font-semibold rounded-2xl bg-white border border-gray-50 text-gray-800 hover:bg-gray-100 active:scale-95 transition-all shadow-sm">9</button>
+            <button onclick="performOperation('×')" class="h-16 text-xl font-semibold rounded-2xl bg-orange-500 text-white hover:bg-orange-600 active:scale-95 transition-all">×</button>
+
+            <!-- 3행 -->
+            <button onclick="inputDigit('4')" class="h-16 text-xl font-semibold rounded-2xl bg-white border border-gray-50 text-gray-800 hover:bg-gray-100 active:scale-95 transition-all shadow-sm">4</button>
+            <button onclick="inputDigit('5')" class="h-16 text-xl font-semibold rounded-2xl bg-white border border-gray-50 text-gray-800 hover:bg-gray-100 active:scale-95 transition-all shadow-sm">5</button>
+            <button onclick="inputDigit('6')" class="h-16 text-xl font-semibold rounded-2xl bg-white border border-gray-50 text-gray-800 hover:bg-gray-100 active:scale-95 transition-all shadow-sm">6</button>
+            <button onclick="performOperation('-')" class="h-16 text-xl font-semibold rounded-2xl bg-orange-500 text-white hover:bg-orange-600 active:scale-95 transition-all">-</button>
+
+            <!-- 4행 -->
+            <button onclick="inputDigit('1')" class="h-16 text-xl font-semibold rounded-2xl bg-white border border-gray-50 text-gray-800 hover:bg-gray-100 active:scale-95 transition-all shadow-sm">1</button>
+            <button onclick="inputDigit('2')" class="h-16 text-xl font-semibold rounded-2xl bg-white border border-gray-50 text-gray-800 hover:bg-gray-100 active:scale-95 transition-all shadow-sm">2</button>
+            <button onclick="inputDigit('3')" class="h-16 text-xl font-semibold rounded-2xl bg-white border border-gray-50 text-gray-800 hover:bg-gray-100 active:scale-95 transition-all shadow-sm">3</button>
+            <button onclick="performOperation('+')" class="h-16 text-xl font-semibold rounded-2xl bg-orange-500 text-white hover:bg-orange-600 active:scale-95 transition-all">+</button>
+
+            <!-- 5행 -->
+            <button onclick="inputDigit('0')" class="h-16 text-xl font-semibold rounded-2xl bg-white border border-gray-50 text-gray-800 hover:bg-gray-100 active:scale-95 transition-all shadow-sm col-span-2 text-left px-7">0</button>
+            <button onclick="inputDot()" class="h-16 text-xl font-semibold rounded-2xl bg-white border border-gray-50 text-gray-800 hover:bg-gray-100 active:scale-95 transition-all shadow-sm">.</button>
+            <button onclick="handleEqual()" class="h-16 text-xl font-semibold rounded-2xl bg-orange-500 text-white hover:bg-orange-600 active:scale-95 transition-all">=</button>
+        </div>
+        
+        <!-- 하단 홈 바 장식 -->
+        <div class="h-1.5 w-32 bg-gray-200 mx-auto mb-4 rounded-full"></div>
+    </div>
+
+    <script>
+        // Lucide 아이콘 렌더링
+        lucide.createIcons();
+
+        // 상태 변수
+        let displayValue = '0';
+        let prevValue = null;
+        let operator = null;
+        let waitingForOperand = false;
+        let history = [];
+
+        const mainDisplay = document.getElementById('main-display');
+        const subDisplay = document.getElementById('sub-display');
+        const historyPanel = document.getElementById('history-panel');
+        const historyList = document.getElementById('history-list');
+        const historyToggle = document.getElementById('history-toggle');
+        const clearHistoryBtn = document.getElementById('clear-history');
+
+        // 디스플레이 업데이트
+        function updateDisplay() {
+            mainDisplay.innerText = displayValue;
+            subDisplay.innerText = prevValue !== null ? `${prevValue} ${operator || ''}` : '';
+        }
+
+        // 숫자 입력
+        function inputDigit(digit) {
+            if (waitingForOperand) {
+                displayValue = String(digit);
+                waitingForOperand = false;
+            } else {
+                displayValue = displayValue === '0' ? String(digit) : displayValue + digit;
+            }
+            updateDisplay();
+        }
+
+        // 소수점 입력
+        function inputDot() {
+            if (waitingForOperand) {
+                displayValue = '0.';
+                waitingForOperand = false;
+            } else if (!displayValue.includes('.')) {
+                displayValue += '.';
+            }
+            updateDisplay();
+        }
+
+        // 초기화
+        function clearAll() {
+            displayValue = '0';
+            prevValue = null;
+            operator = null;
+            waitingForOperand = false;
+            updateDisplay();
+        }
+
+        // 부호 반전
+        function toggleSign() {
+            displayValue = String(parseFloat(displayValue) * -1);
+            updateDisplay();
+        }
+
+        // 퍼센트
+        function inputPercent() {
+            const current = parseFloat(displayValue);
+            if (current === 0) return;
+            displayValue = String(current / 100);
+            updateDisplay();
+        }
+
+        // 연산자 처리
+        function performOperation(nextOperator) {
+            const inputValue = parseFloat(displayValue);
+
+            if (prevValue === null) {
+                prevValue = inputValue;
+            } else if (operator) {
+                const result = calculate(prevValue, inputValue, operator);
+                addHistory(`${prevValue} ${operator} ${inputValue} = ${result}`);
+                prevValue = result;
+                displayValue = String(result);
+            }
+
+            waitingForOperand = true;
+            operator = nextOperator;
+            updateDisplay();
+        }
+
+        // 계산 로직
+        function calculate(prev, next, op) {
+            switch (op) {
+                case '+': return prev + next;
+                case '-': return prev - next;
+                case '×': return prev * next;
+                case '÷': return next === 0 ? 'Error' : prev / next;
+                default: return next;
+            }
+        }
+
+        // 결과 확인 (=)
+        function handleEqual() {
+            const inputValue = parseFloat(displayValue);
+            if (operator && prevValue !== null) {
+                const result = calculate(prevValue, inputValue, operator);
+                if (result === 'Error') {
+                    displayValue = 'Error';
+                } else {
+                    addHistory(`${prevValue} ${operator} ${inputValue} = ${result}`);
+                    displayValue = String(result);
+                }
+                prevValue = null;
+                operator = null;
+                waitingForOperand = true;
+                updateDisplay();
+            }
+        }
+
+        // 히스토리 관리
+        function addHistory(record) {
+            history.unshift(record);
+            if (history.length > 10) history.pop();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            if (history.length === 0) {
+                historyList.innerHTML = '<p class="text-gray-400 text-sm italic">기록이 없습니다.</p>';
+            } else {
+                historyList.innerHTML = history.map(item => `
+                    <div class="text-right text-gray-600 border-b border-gray-100 pb-2 text-sm animate-in fade-in slide-in-from-top-1">
+                        ${item}
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 이벤트 리스너
+        historyToggle.addEventListener('click', () => {
+            historyPanel.classList.toggle('hidden');
+        });
+
+        clearHistoryBtn.addEventListener('click', () => {
+            history = [];
+            renderHistory();
+        });
+
+        // 키보드 지원
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') inputDigit(e.key);
+            if (e.key === '.') inputDot();
+            if (e.key === 'Enter' || e.key === '=') handleEqual();
+            if (e.key === 'Escape') clearAll();
+            if (e.key === '+') performOperation('+');
+            if (e.key === '-') performOperation('-');
+            if (e.key === '*') performOperation('×');
+            if (e.key === '/') performOperation('÷');
+            if (e.key === 'Backspace') {
+                displayValue = displayValue.length > 1 ? displayValue.slice(0, -1) : '0';
+                updateDisplay();
+            }
+        });
+    </script>
+</body>
+</html>
